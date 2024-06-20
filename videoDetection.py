@@ -1,55 +1,63 @@
 import cv2
 from ultralytics import YOLO
+from PIL import Image
+import numpy as np
 
-# Load the trained YOLOv8 model
-model = YOLO('/Users/vishnumr/My Files/Programs/Python/Mini Project/runs/detect/train/weights/best.pt')
+# Load the trained model
+model = YOLO("/Users/vishnumr/My Files/Programs/Python/Mini Project/runs/detect/train2/weights/best.pt")
 
 # Open the video file
-video_path = '/Users/vishnumr/My Files/Programs/Python/Mini Project/WhatsApp Video 2024-06-19 at 14.17.26.mp4'
+video_path = '/Users/vishnumr/My Files/Programs/Python/Mini Project/busdetection.mp4'
 cap = cv2.VideoCapture(video_path)
 
-# Get video properties
-frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-fps = int(cap.get(cv2.CAP_PROP_FPS))
-
-# Define the codec and create a VideoWriter object
-out = cv2.VideoWriter('output_video.avi', cv2.VideoWriter_fourcc(*'XVID'), fps, (frame_width, frame_height))
+# Set the desired confidence thresholds for different labels
+confidence_thresholds = {
+    'bus': 0.3,  # Adjust this value as needed
+    'display': 1.5,     # Adjust this value as needed
+    'dnumber': .5      # Adjust this value as needed
+}
 
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
         break
 
-    # Perform object detection
-    results = model(frame)
+    # Convert the frame to an RGB image (YOLO expects RGB images)
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    # Draw bounding boxes and labels on the frame
+    # Predict using the model
+    results = model.predict(source=frame_rgb, show=False)  # 'show=False' to not open a new window
+
+    # Initialize an empty list to hold filtered detections
+    filtered_detections = []
+
+    # Process each result
     for result in results:
-        # Get the bounding boxes, confidences, and class IDs
-        boxes = result.boxes.xyxy.cpu().numpy()  # xyxy format bounding boxes
-        confidences = result.boxes.conf.cpu().numpy()  # confidence scores
-        class_ids = result.boxes.cls.cpu().numpy()  # class IDs
+        detections = result.boxes
+        filtered_boxes = []
+        for detection in detections:
+            label = model.names[int(detection.cls)]
+            confidence = detection.conf
+            # Check if the confidence meets the threshold for the label
+            if label in confidence_thresholds and confidence >= confidence_thresholds[label]:
+                filtered_boxes.append(detection)
 
-        for box, confidence, class_id in zip(boxes, confidences, class_ids):
-            # Extract the coordinates of the bounding box
-            x1, y1, x2, y2 = map(int, box)
-            # Create the label for the detected object
-            label = f'{model.names[int(class_id)]} {confidence:.2f}'
-            # Draw the bounding box around the detected object
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            # Put the label above the bounding box
-            cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        # Replace the original detections with the filtered ones
+        result.boxes = filtered_boxes
 
-    # Write the frame into the output video
-    out.write(frame)
+        # Plot the results (this returns a NumPy array)
+        img_with_boxes = result.plot()
 
-    # Display the frame (optional)
-    cv2.imshow('Frame', frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        # Convert the image back to BGR for OpenCV display
+        img_bgr = cv2.cvtColor(img_with_boxes, cv2.COLOR_RGB2BGR)
 
-# Release video capture and writer objects
+        # Display the frame with bounding boxes
+        cv2.imshow('frame', img_bgr)
+
+        # Break the loop if 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+# Release the video capture object and close display window
 cap.release()
-out.release()
 cv2.destroyAllWindows()

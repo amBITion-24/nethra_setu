@@ -1,6 +1,5 @@
-
 from roboflow import Roboflow
-rf = Roboflow(api_key="LcP3OZofUZly5m44zT38")
-project = rf.workspace("mahisha").project("bus-front-view")
-version = project.version(3)
+rf = Roboflow(api_key="rNdVM1Z4lALeigBSPfZj")
+project = rf.workspace("nethra-setu").project("nethrasetu")
+version = project.version(1)
 dataset = version.download("yolov8")
