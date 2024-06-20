@@ -1,0 +1,15 @@
+names:
+  - Bus
+  - Bus-stop-board
+  - Display Board
+  - License Plate
+nc: 4
+roboflow:
+  license: CC BY 4.0
+  project: bus-front-view
+  url: https://universe.roboflow.com/mahisha/bus-front-view/dataset/3
+  version: 3
+  workspace: mahisha
+test: ../test/images
+train: /Users/vishnumr/My Files/Programs/Python/Mini Project/bus-front-view-3/test/images
+val: /Users/vishnumr/My Files/Programs/Python/Mini Project/bus-front-view-3/valid/images
