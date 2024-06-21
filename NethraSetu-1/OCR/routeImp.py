@@ -5,7 +5,7 @@ import playsound
 
 def tts_from_csv(bus_number):
     # Read the CSV file
-    with open('NethraSetu-1/OCR/routes.csv', 'r') as file:
+    with open('/Users/vishnumr/My Files/Programs/Python/Mini Project/Data/routes.csv', 'r') as file:
         reader = csv.DictReader(file)
         found = False
         for row in reader:
@@ -16,8 +16,7 @@ def tts_from_csv(bus_number):
                 print("TTS Output:", message)
                 # Convert text to speech using gTTS
                 tts = gTTS(text=message, lang='en')
-                tts.save("output.mp3")  # Save the generated speech to a file
-                # Play the saved speech
+                tts.save("output.mp3") 
                 playsound.playsound("output.mp3")
                 # Delete the temporary file
                 os.remove("output.mp3")
