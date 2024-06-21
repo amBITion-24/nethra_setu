@@ -4,6 +4,7 @@ from PIL import Image
 import numpy as np
 import easyocr
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 
 # Load the YOLOv8 model
 model = YOLO('/Users/vishnumr/My Files/Programs/Python/Mini Project/runs/detect/train2/weights/best.pt')
@@ -12,10 +13,13 @@ model = YOLO('/Users/vishnumr/My Files/Programs/Python/Mini Project/runs/detect/
 reader = easyocr.Reader(['en'])
 
 class VideoProcessor:
-    @staticmethod
-    # Function to get the ROI of the display number
-    def get_display_roi(image, model):
-        img_width, img_height = image.size
+    def __init__(self):
+        self.display_coords = None
+
+    def get_display_roi(self, image, model):
+        if self.display_coords:
+            x1, y1, x2, y2 = self.display_coords
+            return image.crop((x1, y1, x2, y2))
         
         # Perform inference
         results = model(image)
@@ -27,18 +31,16 @@ class VideoProcessor:
         
         # Assuming the display number has a specific class label, e.g., 1
         display_class_label = 1
-        display_coords = None
-        
         for label, coord in zip(labels, coords):
             if label == display_class_label:
-                display_coords = coord
+                self.display_coords = coord
                 break
         
-        if display_coords is None:
+        if self.display_coords is None:
             raise ValueError("Display number not found in the frame")
         
         # Extract the coordinates
-        x1, y1, x2, y2 = display_coords[:4]
+        x1, y1, x2, y2 = self.display_coords[:4]
         
         # Crop the ROI from the image
         roi = image.crop((x1, y1, x2, y2))
@@ -46,7 +48,6 @@ class VideoProcessor:
         return roi
 
     @staticmethod
-    # Function to read display number
     def read_display_number(roi):
         # Convert PIL image to OpenCV format
         roi_cv = cv2.cvtColor(np.array(roi), cv2.COLOR_RGB2BGR)
@@ -55,15 +56,27 @@ class VideoProcessor:
         result = reader.readtext(roi_cv)
         
         # Extract the display number text
-        display_number = ""
-        for (bbox, text, prob) in result:
-            display_number += text + " "
+        display_number = " ".join([text for (bbox, text, prob) in result])
         
         return display_number.strip()
 
-    @staticmethod
-    # Process video frames
-    def process_video(video_path):
+    def process_frame(self, frame):
+        # Convert the frame to PIL format
+        frame_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        
+        try:
+            # Get the ROI and read display number
+            roi = self.get_display_roi(frame_pil, model)
+            display_number = VideoProcessor.read_display_number(roi)
+            
+            # Draw the display number on the frame
+            cv2.putText(frame, display_number, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            return frame, display_number
+        except ValueError as e:
+            # If display number not found, skip the frame
+            return frame, None
+
+    def process_video(self, video_path):
         # Open the video file
         cap = cv2.VideoCapture(video_path)
         
@@ -72,6 +85,9 @@ class VideoProcessor:
             return
         
         predicted_strings = []
+        frame_count = 0
+        batch_size = 5  # Batch size for batch processing
+        frames = []
         
         while True:
             # Read frame-by-frame
@@ -79,30 +95,29 @@ class VideoProcessor:
             if not ret:
                 break
             
-            # Convert the frame to PIL format
-            frame_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            frame_count += 1
+            # Frame skipping
+            if frame_count % 5 != 0:
+                continue
             
-            try:
-                # Get the ROI and read display number
-                roi = VideoProcessor.get_display_roi(frame_pil, model)
-                display_number = VideoProcessor.read_display_number(roi)
+            frames.append(frame)
+            if len(frames) == batch_size:
+                # Batch process frames
+                with ThreadPoolExecutor() as executor:
+                    results = list(executor.map(self.process_frame, frames))
                 
-                # Store the detected display number in the list
-                predicted_strings.append(display_number)
+                for processed_frame, display_number in results:
+                    if display_number:
+                        predicted_strings.append(display_number)
                 
-                # Draw the display number on the frame
-                cv2.putText(frame, display_number, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                frames = []
             
-            except ValueError as e:
-                # If display number not found, skip the frame
-                pass
-            
-            # Display the frame
-            cv2.imshow('Video', frame)
-            
-            # Press 'q' to exit the video display
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            # Display the last processed frame
+            if results:
+                last_frame, _ = results[-1]
+                cv2.imshow('Video', last_frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
         
         # Release the video capture and close windows
         cap.release()
@@ -113,7 +128,8 @@ class VideoProcessor:
 # Example usage
 if __name__ == "__main__":
     video_path = "/Users/vishnumr/My Files/Programs/Python/Mini Project/busV15.mp4"
-    predicted_strings = VideoProcessor.process_video(video_path)
+    processor = VideoProcessor()
+    predicted_strings = processor.process_video(video_path)
     print(f"Predicted strings: {predicted_strings}")
 
     filtered_strings = [s for s in predicted_strings if s]
@@ -122,6 +138,6 @@ if __name__ == "__main__":
     if filtered_strings:
         most_common_string = Counter(filtered_strings).most_common(1)[0][0]
         # Output the most common string
-        print(f"Most common string: {most_common_string}")
+        print(f"\n\nMost common string: {most_common_string}")
     else:
         print("No valid strings were found.")
