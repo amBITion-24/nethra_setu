@@ -1,10 +1,11 @@
 from videotstEff import VideoProcessor
 from tts_new_Eff import TextToSpeech
+from routeImp import tts_from_csv
 from collections import Counter
 
 bus_numbers_static = ['KIA-14', 'G4', '365J', '356K', '260Q']
 if __name__ == "__main__":
-    video_path = "/Users/vishnumr/My Files/Programs/Python/Mini Project/busV15.mp4"
+    video_path = "/Users/vishnumr/My Files/Programs/Python/Mini Project/bus15s.mp4"
     processor = VideoProcessor()
     predicted_strings = processor.process_video(video_path)
     print(f"Predicted strings: {predicted_strings}")
@@ -21,5 +22,7 @@ if __name__ == "__main__":
         # Initialize TTS and speak the best match
         tts = TextToSpeech()
         tts.speak_text(best_match)
+
+        tts_from_csv(best_match)
     else:
         print("No valid strings were found.")
