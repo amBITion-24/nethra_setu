@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import cv2
 
 # Load the trained YOLO model (make sure to specify the path to your trained weights)
-model = YOLO("/Users/vishnumr/My Files/Programs/Python/Mini Project/runs/detect/train2/weights/best.pt")
+model = YOLO("/Users/vishnumr/My Files/Programs/Python/Mini Project/Trained Models/best.pt")
 
 # Load and preprocess the input image
 image_path = "/Users/vishnumr/My Files/Programs/Python/Mini Project/Data/bus4.jpeg"
