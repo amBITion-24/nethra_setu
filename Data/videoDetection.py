@@ -7,14 +7,14 @@ import numpy as np
 model = YOLO("/Users/vishnumr/My Files/Programs/Python/Mini Project/runs/detect/train2/weights/best.pt")
 
 # Open the video file
-video_path = '/Users/vishnumr/My Files/Programs/Python/Mini Project/busdetection.mp4'
+video_path = '/Users/vishnumr/My Files/Programs/Python/Mini Project/Data/bus15s.mp4'
 cap = cv2.VideoCapture(video_path)
 
 # Set the desired confidence thresholds for different labels
 confidence_thresholds = {
-    'bus': 0.3,  # Adjust this value as needed
-    'display': 1.5,     # Adjust this value as needed
-    'dnumber': .5      # Adjust this value as needed
+    'bus': 0.3,  
+    'display': 1.5,     
+    'dnumber': .5     
 }
 
 while cap.isOpened():

@@ -4,6 +4,6 @@ from ultralytics import YOLO
 model = YOLO("yolov8n.yaml")
 
 # Train the model
-model.train(data='/Users/vishnumr/My Files/Programs/Python/Mini Project/NethraSetu-1/data.yaml', epochs=100)
+model.train(data='/Users/vishnumr/My Files/Programs/Python/Mini Project/NethraSetu-2/data.yaml', epochs=100)
 
 

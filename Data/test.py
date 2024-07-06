@@ -5,7 +5,7 @@ import cv2
 model = YOLO("/Users/vishnumr/My Files/Programs/Python/Mini Project/runs/detect/train2/weights/best.pt")
 
 # Load and preprocess the input image
-image_path = "/Users/vishnumr/My Files/Programs/Python/Mini Project/bus4.jpeg"
+image_path = "/Users/vishnumr/My Files/Programs/Python/Mini Project/Data/bus4.jpeg"
 image = cv2.imread(image_path)
 
 # Setting confidance sore

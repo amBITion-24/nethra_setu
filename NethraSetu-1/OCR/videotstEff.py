@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 import Levenshtein
 
 # Load the YOLOv8 model
-model_path = '/Users/vishnumr/My Files/Programs/Python/Mini Project/runs/detect/train2/weights/best.pt'
+model_path = '/Users/vishnumr/My Files/Programs/Python/Mini Project/Trained Models/best.pt'
 
 # Initialize EasyOCR reader
 reader = easyocr.Reader(['en'])
@@ -34,7 +34,7 @@ class VideoProcessor:
         coords = detections.xyxy.cpu().numpy()
         
         # Assuming the display number has a specific class label, e.g., 1
-        display_class_label = 1
+        display_class_label = 2
         for label, coord in zip(labels, coords):
             if label == display_class_label:
                 self.display_coords = coord
@@ -48,7 +48,7 @@ class VideoProcessor:
         
         # Crop the ROI from the image
         roi = image.crop((x1, y1, x2, y2))
-        
+
         return roi
 
     @staticmethod

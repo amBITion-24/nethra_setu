@@ -1,0 +1,14 @@
+names:
+  - bus
+  - display
+  - dnumber
+nc: 3
+roboflow:
+  license: CC BY 4.0
+  project: nethrasetu
+  url: https://universe.roboflow.com/nethra-setu/nethrasetu/dataset/2
+  version: 2
+  workspace: nethra-setu
+test: ../test/images
+train: /Users/vishnumr/My Files/Programs/Python/Mini Project/NethraSetu-2/train/images
+val: /Users/vishnumr/My Files/Programs/Python/Mini Project/NethraSetu-2/valid/images
